@@ -1,107 +1,58 @@
-# Default values for helm-for-jenkins.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+global:
+  namespace: "default"
 
-replicaCount: 1
+movie:
+  image: "bullfinch38/movie-image"
+  replicas: 1
+  tag: "latest"
+  port: 8000
+  environment:
+    DATABASE_URI: "postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev"
+    CAST_SERVICE_HOST_URL: "http://cast-service:8000/api/v1/casts/"
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+cast:
+  image: "bullfinch38/movie-image"
+  replicas: 1
+  tag: "latest"
+  port: 8000
+  environment:
+    DATABASE_URI: "postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev"
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+movieDB:
+  image: "postgres:12.1-alpine"
+  replicas: 1
+  port: 5432
+  POSTGRES_USER: "movie_db_username"
+  POSTGRES_PASSWORD: "movie_db_password"
+  POSTGRES_DB: "movie_db_dev"
+  pvcName: movie-db-pvc
+  volume:
+    size: "1Gi"
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+castDB:
+  image: "postgres:12.1-alpine"
+  replicas: 1
+  port: 5432
+  POSTGRES_USER: "cast_db_username"
+  POSTGRES_PASSWORD: "cast_db_password"
+  POSTGRES_DB: "cast_db_dev"
+  pvcName: cast-db-pvc
+  volume:
+    size: "1Gi"
 
-podAnnotations: {}
-podLabels: {}
+nginx:
+  image: "nginx:latest"
+  replicas: 1
+  port: 8080
+  config: |
+    server {
+      listen 8080;
 
-podSecurityContext: {}
-  # fsGroup: 2000
+      location /api/v1/movies {
+        proxy_pass http://movie-service:8000/api/v1/movies;
+      }
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+      location /api/v1/casts {
+        proxy_pass http://cast-service:8000/api/v1/casts;
+      }
+    }

@@ -1,0 +1,24 @@
+тиapiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-deployment
+spec:
+  replicas: {{ .Values.movie.replicas }}
+  selector:
+    matchLabels:
+      app: movie-deployment
+  template:
+    metadata:
+      labels:
+        app: movie-deployment
+    spec:
+      containers:
+      - name: movie-deployment
+        image: "{{ .Values.movie.image }}:{{ .Values.movie.tag }}"
+        ports:
+        - containerPort: {{ .Values.movie.port }}
+        env:
+        - name: DATABASE_URI
+          value: "postgresql://{{ .Values.movieDB.POSTGRES_USER }}:{{ .Values.movieDB.POSTGRES_PASSWORD }}@movie-db/{{ .Values.movieDB.POSTGRES_DB }}"
+        - name: CAST_SERVICE_HOST_URL
+          value: "http://cast-service:{{ .Values.cast.port }}/api/v1/casts/"
