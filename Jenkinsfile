@@ -1,3 +1,6 @@
+Приведенный ниже код включает все предложенные изменения:
+
+```groovy
 pipeline {
     environment {
         DOCKER_ID = "bullfinch38"
@@ -28,11 +31,15 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        docker run -d --name cast-service $DOCKER_ID/$CAST_IMAGE:$DOCKER_TAG
+                        docker stop cast-service-${BUILD_ID} || true
+                        docker rm cast-service-${BUILD_ID} || true
+                        docker run -d --name cast-service-${BUILD_ID} $DOCKER_ID/$CAST_IMAGE:$DOCKER_TAG
                         sleep 10
                     '''
                     sh '''
-                        docker run -d --name movie-service -p 8080:8080 $DOCKER_ID/$MOVIE_IMAGE:$DOCKER_TAG
+                        docker stop movie-service-${BUILD_ID} || true
+                        docker rm movie-service-${BUILD_ID} || true
+                        docker run -d --name movie-service-${BUILD_ID} -p 8080:8080 $DOCKER_ID/$MOVIE_IMAGE:$DOCKER_TAG
                         sleep 10
                     '''
                 }
@@ -136,8 +143,8 @@ pipeline {
     post {
         success {
             sh '''
-                docker stop cast-service movie-service
-                docker rm cast-service movie-service
+                docker stop cast-service-${BUILD_ID} movie-service-${BUILD_ID}
+                docker rm cast-service-${BUILD_ID} movie-service-${BUILD_ID}
             '''
         }
 
@@ -149,3 +156,4 @@ pipeline {
         }
     }
 }
+```
