@@ -1,0 +1,31 @@
+global:
+  namespace: "prod"
+
+movie:
+  tag: "prod"
+  replicas: 3
+  environment:
+    POSTGRES_USER: "movie_db_username_prod"
+    POSTGRES_PASSWORD: "movie_db_password_prod"
+    POSTGRES_DB: "movie_db_prod_prod"
+    POSTGRES_HOST: "movie_db_prod"
+
+cast:
+  tag: "prod"
+  replicas: 3
+  environment:
+    POSTGRES_USER: "cast_db_username_prod"
+    POSTGRES_PASSWORD: "cast_db_password_prod"
+    POSTGRES_DB: "cast_db_prod"
+    POSTGRES_HOST: "cast-db"
+
+movieDB:
+  POSTGRES_USER: "movie_db_username_prod"
+  POSTGRES_PASSWORD: "movie_db_password_prod"
+  POSTGRES_DB: "movie_db_prod"
+  POSTGRES_HOST: "movie-db"
+
+castDB:
+  POSTGRES_USER: "cast_db_username_prod"
+  POSTGRES_PASSWORD: "cast_db_password_prod"
+  POSTGRES_DB: "cast_db_prod"

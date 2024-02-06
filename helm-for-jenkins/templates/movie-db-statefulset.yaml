@@ -1,22 +1,22 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: movie-db-deployment
+  name: movie-db-statefulset
   namespace: {{ .Values.global.namespace }}
   labels:
-    app: movie-db-deployment 
+    app: movie-db-statefulset
 spec:
   replicas: {{ .Values.movieDB.replicas }}
   selector:
     matchLabels:
-      app: movie-db-deployment
+      app: movie-db-statefulset
   template:
     metadata:
       labels:
-        app: movie-db-deployment
+        app: movie-db-statefulset
     spec:
       containers:
-      - name: movie-db-deployment
+      - name: movie-db-statefulset
         image: {{ .Values.movieDB.image }}
         env:
         - name: POSTGRES_DB
@@ -25,6 +25,10 @@ spec:
           value: {{ .Values.movieDB.POSTGRES_USER }}
         - name: POSTGRES_PASSWORD
           value: {{ .Values.movieDB.POSTGRES_PASSWORD }}
+        - name: DATABASE_URI
+          value: postgresql://{{ .Values.movie.environment.POSTGRES_USER }}:{{ .Values.movie.environment.POSTGRES_PASSWORD }}@{{ .Values.movie.environment.POSTGRES_HOST }}/{{ .Values.movie.environment.POSTGRES_DB }}
+        - name: CAST_SERVICE_HOST_URL
+          value: http://cast-service:{{ .Values.movie.port }}/api/v1/casts/
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: {{ .Values.movieDB.pvcName }}

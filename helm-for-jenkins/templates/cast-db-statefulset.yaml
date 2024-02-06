@@ -1,22 +1,22 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: cast-db-deployment
+  name: cast-db-statefulset
   namespace: {{ .Values.namespace }}
   labels:
-    app: cast-db-deployment
+    app: cast-db-statefulset
 spec:
   replicas: {{ .Values.castDB.replicas }}
   selector:
     matchLabels:
-      app: cast-db-deployment
+      app: cast-db-statefulset
   template:
     metadata:
       labels:
-        app: cast-db-deployment
+        app: cast-db-statefulset
     spec:
       containers:
-      - name: cast-db-deployment
+      - name: cast-db-statefulset
         image: {{ .Values.castDB.image }}
         env:
         - name: POSTGRES_DB

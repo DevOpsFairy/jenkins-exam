@@ -1,0 +1,45 @@
+global:
+  namespace: "dev"
+
+movie:
+  tag: "dev"
+  environment:
+    POSTGRES_USER: "movie_db_username_dev"
+    POSTGRES_PASSWORD: "movie_db_password_dev"
+    POSTGRES_DB: "movie_db_dev_dev"
+    POSTGRES_HOST: "movie_db_dev"
+
+cast:
+  tag: "dev"
+  environment:
+    POSTGRES_USER: "cast_db_username_dev"
+    POSTGRES_PASSWORD: "cast_db_password_dev"
+    POSTGRES_DB: "cast_db_dev"
+    POSTGRES_HOST: "cast-db"
+
+movieDB:
+  POSTGRES_USER: "movie_db_username_dev"
+  POSTGRES_PASSWORD: "movie_db_password_dev"
+  POSTGRES_DB: "movie_db_dev"
+
+castDB:
+  POSTGRES_USER: "cast_db_username_dev"
+  POSTGRES_PASSWORD: "cast_db_password_dev"
+  POSTGRES_DB: "cast_db_dev"
+
+nginx:
+  image: "nginx:latest"
+  replicas: 1
+  port: 8080
+  config: |
+    server {
+      listen 8080;
+
+      location /api/v1/movies {
+        proxy_pass http://movie-service:8000/api/v1/movies;
+      }
+
+      location /api/v1/casts {
+        proxy_pass http://cast-service:8000/api/v1/casts;
+      }
+    }

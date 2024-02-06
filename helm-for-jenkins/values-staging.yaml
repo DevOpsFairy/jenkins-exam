@@ -1,0 +1,33 @@
+global:
+  namespace: "stage"
+
+movie:
+  tag: "stage"
+  replicas: 2
+  environment:
+    POSTGRES_USER: "movie_db_username_stage"
+    POSTGRES_PASSWORD: "movie_db_password_stage"
+    POSTGRES_DB: "movie_db_stage_stage"
+    POSTGRES_HOST: "movie_db_stage"
+
+cast:
+  tag: "stage"
+  replicas: 2
+  environment:
+    POSTGRES_USER: "cast_db_username_stage"
+    POSTGRES_PASSWORD: "cast_db_password_stage"
+    POSTGRES_DB: "cast_db_stage"
+    POSTGRES_HOST: "cast-db"
+
+movieDB:
+  replicas: 2
+  POSTGRES_USER: "movie_db_username_stage"
+  POSTGRES_PASSWORD: "movie_db_password_stage"
+  POSTGRES_DB: "movie_db_stage"
+  POSTGRES_HOST: "movie-db"
+
+castDB:
+  replicas: 2
+  POSTGRES_USER: "cast_db_username_stage"
+  POSTGRES_PASSWORD: "cast_db_password_stage"
+  POSTGRES_DB: "cast_db_stage"

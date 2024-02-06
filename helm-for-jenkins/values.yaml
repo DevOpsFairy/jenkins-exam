@@ -9,8 +9,10 @@ movie:
   tag: "latest"
   port: 8000
   environment:
-    DATABASE_URI: "postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev"
-    CAST_SERVICE_HOST_URL: "http://cast-service:8000/api/v1/casts/"
+    POSTGRES_USER: "movie_db_username"
+    POSTGRES_PASSWORD: "movie_db_password"
+    POSTGRES_DB: "movie_db_dev"
+    POSTGRES_HOST: "movie_db"
 
 cast:
   image: "bullfinch38/movie-image"
@@ -18,7 +20,10 @@ cast:
   tag: "latest"
   port: 8000
   environment:
-    DATABASE_URI: "postgresql://cast_db_username:cast_db_password@cast-db/cast_db_dev"
+    POSTGRES_USER: "cast_db_username"
+    POSTGRES_PASSWORD: "cast_db_password"
+    POSTGRES_DB: "cast_db_dev"
+    POSTGRES_HOST: "cast-db"
 
 movieDB:
   image: "postgres:12.1-alpine"
@@ -27,7 +32,8 @@ movieDB:
   POSTGRES_USER: "movie_db_username"
   POSTGRES_PASSWORD: "movie_db_password"
   POSTGRES_DB: "movie_db_dev"
-  pvcName: movie-db-pvc
+  POSTGRES_HOST: "movie-db"
+  pvcName: "movie-db-pvc"
   volume:
     size: "1Gi"
 
@@ -38,7 +44,7 @@ castDB:
   POSTGRES_USER: "cast_db_username"
   POSTGRES_PASSWORD: "cast_db_password"
   POSTGRES_DB: "cast_db_dev"
-  pvcName: cast-db-pvc
+  pvcName: "cast-db-pvc"
   volume:
     size: "1Gi"
 

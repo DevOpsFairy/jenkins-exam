@@ -1,0 +1,29 @@
+global:
+  namespace: "qa"
+
+movie:
+  tag: "qa"
+  environment:
+    POSTGRES_USER: "movie_db_username_qa"
+    POSTGRES_PASSWORD: "movie_db_password_qa"
+    POSTGRES_DB: "movie_db_qa_qa"
+    POSTGRES_HOST: "movie_db_qa"
+
+cast:
+  tag: "qa"
+  environment:
+    POSTGRES_USER: "cast_db_username_qa"
+    POSTGRES_PASSWORD: "cast_db_password_qa"
+    POSTGRES_DB: "cast_db_qa"
+    POSTGRES_HOST: "cast-db"
+
+movieDB:
+  POSTGRES_USER: "movie_db_username_qa"
+  POSTGRES_PASSWORD: "movie_db_password_qa"
+  POSTGRES_DB: "movie_db_qa"
+  POSTGRES_HOST: "movie-db"
+
+castDB:
+  POSTGRES_USER: "cast_db_username_qa"
+  POSTGRES_PASSWORD: "cast_db_password_qa"
+  POSTGRES_DB: "cast_db_qa"

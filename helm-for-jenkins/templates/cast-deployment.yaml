@@ -20,4 +20,4 @@ spec:
         - containerPort: {{ .Values.cast.port }}
         env:
         - name: DATABASE_URI
-          value: "postgresql://{{ .Values.castDB.user }}:{{ .Values.castDB.password }}@cast-db/{{ .Values.castDB.dbName }}"
+          value: "postgresql://{{ .Values.cast.environment.POSTGRES_USER }}:{{ .Values.cast.environment.POSTGRES_PASSWORD }}@{{ .Values.cast.environment.POSTGRES_HOST }}/{{ .Values.cast.environment.POSTGRES_DB }}"
