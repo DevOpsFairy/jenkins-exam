@@ -5,10 +5,10 @@ pipeline {
         // Credentials
         DOCKER_CREDENTIALS = credentials('DOCKER_HUB_PASS') 
         // Image repositories
-        CAST_IMAGE = "bullfinch38/cast-service"
-        MOVIE_IMAGE = "bullfinch38/movie-service"
+        CAST_IMAGE = "devopsfairy/cast-service"
+        MOVIE_IMAGE = "devopsfairy/movie-service"
         // Docker Hub Username
-        DOCKER_USERNAME = 'bullfinch38' 
+        DOCKER_USERNAME = 'devopsfairy' 
     }
     
     stages {
@@ -64,7 +64,6 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    ls
                     cat $KUBECONFIG > .kube/config                    
                     '''
                     sh "helm upgrade --install jenkins-devops ./helm-for-jenkins --namespace ${env.BRANCH_NAME} --values ./helm-for-jenkins/${valuesFile} --set image.tag=${env.BUILD_NUMBER}"
@@ -80,7 +79,7 @@ pipeline {
                 }
             }
             environment {
-                KUBECONFIG = credentials("config") // Adjust the credential ID accordingly
+                KUBECONFIG = credentials("config") 
             }
             steps {
                 timeout(time: 5, unit: "MINUTES") {
@@ -90,7 +89,6 @@ pipeline {
                     sh '''
                     rm -Rf .kube
                     mkdir .kube
-                    ls
                     cat $KUBECONFIG > .kube/config
                     '''
                     sh "helm upgrade --install jenkins-devops ./helm-for-jenkins --namespace prod --values ./helm-for-jenkins/values-prod.yaml --set image.tag=${env.BUILD_NUMBER}"
