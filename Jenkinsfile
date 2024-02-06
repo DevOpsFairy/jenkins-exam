@@ -9,9 +9,9 @@ pipeline {
         KUBE_NAMESPACE_PROD = "prod"
         HELM_CHART_NAME = "helm-for-jenkins"
     }
-    
+
     agent any
-    
+
     stages {
         stage('Build and Push Docker Images') {
             steps {
@@ -19,45 +19,6 @@ pipeline {
                     docker.build("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}", "./")
                     docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_credentials') {
                         docker.image("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}").push()
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to Dev Environment') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh '''
-                            cp ${KUBECONFIG} .kube/config
-                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_DEV} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy to QA Environment') {
-            steps {
-                // Add steps to deploy to QA environment
-            }
-        }
-        
-        stage('Deploy to Staging Environment') {
-            steps {
-                // Add steps to deploy to staging environment
-            }
-        }
-        
-        stage('Manual Approval for Production Deployment') {
-            steps {
-                input message: 'Do you want to deploy in production?', ok: 'Deploy'
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh '''
-                            cp ${KUBECONFIG} .kube/config
-                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_PROD} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
                     }
                 }
             }
@@ -125,49 +86,28 @@ pipeline {
             }
         }
 
-        stage('Deploy Dev') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
+        stage('Deploy to Dev Environment') {
             steps {
                 script {
-                    sh '''
-                        helm upgrade --install jenkins-dev jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_DEV}
-                    '''
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh '''
+                            cp ${KUBECONFIG} .kube/config
+                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_DEV} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Deploy QA') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
-            steps {
-                script {
-                    sh '''
-                        helm upgrade --install jenkins-qa jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_QA}
-                    '''
-                }
-            }
+        stage('Deploy to QA Environment') {
+            // Add QA deployment steps here
         }
 
-        stage('Deploy Staging') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
-            steps {
-                script {
-                    sh '''
-                        helm upgrade --install jenkins-staging jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_STAGING}
-                    '''
-                }
-            }
+        stage('Deploy to Staging Environment') {
+            // Add Staging deployment steps here
         }
 
-        stage('Deploy Prod') {
-            environment {
-                KUBECONFIG = credentials("config")
-            }
+        stage('Deploy to Prod Environment') {
             when {
                 expression {
                     return env.GIT_BRANCH == "origin/master"
@@ -179,9 +119,12 @@ pipeline {
                 }
 
                 script {
-                    sh '''
-                        helm upgrade --install jenkins-prod jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_PROD}
-                    '''
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh '''
+                            cp ${KUBECONFIG} .kube/config
+                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_PROD} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '''
+                    }
                 }
             }
         }
