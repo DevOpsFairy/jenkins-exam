@@ -1,3 +1,5 @@
+# values.yaml for all templates
+
 global:
   namespace: "default"
 
