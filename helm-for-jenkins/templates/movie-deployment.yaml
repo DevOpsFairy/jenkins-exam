@@ -2,6 +2,7 @@
 kind: Deployment
 metadata:
   name: movie-deployment
+  namespace: {{ .Values.global.namespace }}
 spec:
   replicas: {{ .Values.movie.replicas }}
   selector:
