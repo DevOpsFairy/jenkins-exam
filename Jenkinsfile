@@ -1,105 +1,197 @@
 pipeline {
-  environment { 
-    DOCKER_ID = "bullfinch38" // replace this with your docker-id
-    MOVIES_EXAM_DB = "jenkins-exam-movies-db"
-    MOVIES_EXAM_APP = "jenkins-exam-movies-app"
-    CASTS_EXAM_APP = "jenkins-exam-casts-app"
-    NGINX_EXAM_APP = "jenkins-exam-nginx-app"
-    DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build to increment the value by 1 with each new build
-  }
-  agent any // Jenkins will be able to select all available agents
-  stages {
-    stage('Cleaning former runs') {
-      steps{
-        sh """
-        docker rm -f movie-db-container
-        docker rm -f cast-db-container
-        docker rm -f exam-nginx
-        docker rm -f exam-movie-app
-        docker rm -f exam-casts-app
-        docker rm -f exam-test-nginx
-        docker rm -f exam-test-movies
-        docker rm -f exam-test-casts
-        """
-      }
+    environment {
+        DOCKER_ID = "bullfinch38"
+        DOCKER_IMAGE = "movie-image"
+        DOCKER_TAG = "v.${BUILD_ID}.0"
+        KUBE_NAMESPACE_DEV = "dev"
+        KUBE_NAMESPACE_QA = "qa"
+        KUBE_NAMESPACE_STAGING = "staging"
+        KUBE_NAMESPACE_PROD = "prod"
+        HELM_CHART_NAME = "helm-for-jenkins"
     }
-
-    stage('echo branch name'){
-      when{
-        expression{
-          return env.GIT_BRANCH == "origin/master"
+    
+    agent any
+    
+    stages {
+        stage('Build and Push Docker Images') {
+            steps {
+                script {
+                    docker.build("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}", "./")
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_credentials') {
+                        docker.image("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                    }
+                }
+            }
         }
-      }
-      steps{
-        echo "master"
-      }
-    }
-
-    stage('Deploy the movie DB') {
-      steps {
-        sh '''docker run -d --name movie-db-container -v postgres_data_movie:/var/lib/postgresql/data/ -e POSTGRES_USER=movie_db_username \\
-                -e POSTGRES_PASSWORD=movie_db_password -e POSTGRES_DB=movie_db_dev --ip 172.17.0.2 postgres:12.1-alpine'''
-      }
-    }
-
-    stage('Push images in docker Hub') {
-      environment{
-        DOCKER_PASS = credentials("DOCKER_HUB_PASS")
-      }
-      steps{
-        sh '''
-        docker login -u $DOCKER_ID -p $DOCKER_PASS
-        docker push $DOCKER_ID/$NGINX_EXAM_APP:$DOCKER_TAG
-        docker push $DOCKER_ID/$CASTS_EXAM_APP:$DOCKER_TAG
-        docker push $DOCKER_ID/$MOVIES_EXAM_APP:$DOCKER_TAG
-        '''
-      }
-    }
-
-    stage('Deploy Dev') {
-      environment{
-        KUBECONFIG = credentials("config") // we retrieve kubeconfig from the secret file called config saved on Jenkins
-      }
-      steps {
-        script {
-          sh '''
-          helm upgrade --install jenkins-dev jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace dev
-          '''
+        
+        stage('Deploy to Dev Environment') {
+            steps {
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh '''
+                            cp ${KUBECONFIG} .kube/config
+                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_DEV} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '''
+                    }
+                }
+            }
         }
-      }
+        
+        stage('Deploy to QA Environment') {
+            steps {
+                // Add steps to deploy to QA environment
+            }
+        }
+        
+        stage('Deploy to Staging Environment') {
+            steps {
+                // Add steps to deploy to staging environment
+            }
+        }
+        
+        stage('Manual Approval for Production Deployment') {
+            steps {
+                input message: 'Do you want to deploy in production?', ok: 'Deploy'
+                script {
+                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                        sh '''
+                            cp ${KUBECONFIG} .kube/config
+                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_PROD} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Unit Test - Movies API') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm --name test-movies-api -v ./movie-service/:/app/ $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG} pytest -v
+                    '''
+                }
+            }
+        }
+
+        stage('Unit Test - Casts API') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm --name test-casts-api -v ./cast-service/:/app/ $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG} pytest -v
+                    '''
+                }
+            }
+        }
+
+        stage('Integration Test - Nginx') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm --name test-nginx -v ./nginx_config.conf:/etc/nginx/default.conf curlimages/curl -L -v http://172.17.0.4
+                    '''
+                }
+            }
+        }
+
+        stage('Integration Test - Movies API') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm --name test-movies-api curlimages/curl -L -v http://172.17.0.5:8000/api/v1/movies/status
+                    '''
+                }
+            }
+        }
+
+        stage('Integration Test - Casts API') {
+            steps {
+                script {
+                    sh '''
+                        docker run --rm --name test-casts-api curlimages/curl -L -v http://172.17.0.6:8000/api/v1/casts/status
+                    '''
+                }
+            }
+        }
+
+        stage('Push images in Docker Hub') {
+            environment {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
+            }
+            steps {
+                sh '''
+                    docker login -u $DOCKER_ID -p $DOCKER_PASS
+                    docker push $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG}
+                '''
+            }
+        }
+
+        stage('Deploy Dev') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                        helm upgrade --install jenkins-dev jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_DEV}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy QA') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                        helm upgrade --install jenkins-qa jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_QA}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Staging') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            steps {
+                script {
+                    sh '''
+                        helm upgrade --install jenkins-staging jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_STAGING}
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Prod') {
+            environment {
+                KUBECONFIG = credentials("config")
+            }
+            when {
+                expression {
+                    return env.GIT_BRANCH == "origin/master"
+                }
+            }
+            steps {
+                timeout(time: 15, unit: "MINUTES") {
+                    input message: 'Want to deploy in prod ', ok: 'Yes'
+                }
+
+                script {
+                    sh '''
+                        helm upgrade --install jenkins-prod jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace ${KUBE_NAMESPACE_PROD}
+                    '''
+                }
+            }
+        }
     }
 
-    stage('Deploiement en prod') {
-      environment{
-        KUBECONFIG = credentials("config") // we retrieve kubeconfig from the secret file called config saved on Jenkins
-      }
-      when{
-        expression{
-          return env.GIT_BRANCH == "origin/master"
+    post {
+        failure {
+            mail to: "konstantinsnigirev92@gmail.com",
+                 subject: "${env.JOB_NAME} - Build # ${env.BUILD_ID} has failed",
+                 body: "For more info on the pipeline failure, check out the console output at ${env.BUILD_URL}"
         }
-      }
-      steps {
-        // Create an Approval Button with a timeout of 15 minutes.
-        // This requires a manual validation to deploy on the production environment
-        timeout(time: 15, unit: "MINUTES"){        
-          input message: 'Want to deploy in prod ', ok: 'Yes'
-        }                   
-      
-        script{
-          sh '''
-          helm upgrade --install jenkins-prod jenkins-exam/ --values=./jenkins-exam/values.yaml --namespace prod
-          '''
-        }
-      }
     }
-  }
-
-  post {
-    failure {
-      echo "This will run if the job failed"
-      mail to: "konstantinsnigirev92@gmail.com", // replace this with your email
-           subject: "${env.JOB_NAME} - Build # ${env.BUILD_ID} has failed",
-           body: "For more info on the pipeline failure, check out the console output at ${env.BUILD_URL}"
-    }
-  }
 }
