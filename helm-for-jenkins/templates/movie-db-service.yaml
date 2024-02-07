@@ -7,6 +7,6 @@ spec:
   selector:
     app: movie-db-deployment
   ports:
-   - name: TCP
+   - name: tcp
      port: {{ .Values.movieDB.port }}
      targetPort: {{ .Values.movieDB.port }}
