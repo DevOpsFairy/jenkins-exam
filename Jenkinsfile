@@ -127,124 +127,104 @@ pipeline {
         }
 
         stage('Deployment to dev') {
-            parallel {
-                stage('Deployment to dev') {
-                    environment {
-                        KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            ls
-                            cat $KUBECONFIG > .kube/config
-                            cp helm-for-jenkins/values-dev.yaml values-dev.yml
-                            cat values-dev.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                            helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
-                            '''
-                        }
-                    }
+            environment {
+                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                    cat values-dev.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                    helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
+                    '''
                 }
             }
         }
 
-        stage(' Deployment to qa') {
-            parallel {
-                stage('Deployment to qa') {
-                    environment {
-                        KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            ls
-                            cat $KUBECONFIG > .kube/config
-                            cp helm-for-jenkins/values-qa.yaml values-qa.yml
-                            cat values-qa.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                            helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
-                            '''
-                        }
-                    }
+        stage('Deployment to qa') {
+            environment {
+                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                    cat values-qa.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                    helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
+                    '''
                 }
             }
         }
 
-        stage(' Deployment to staging') {
-            parallel {
-                stage('Deployment to staging') {
-                    environment {
-                        KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            ls
-                            cat $KUBECONFIG > .kube/config
-                            cp helm-for-jenkins/values-staging.yaml values-staging.yml
-                            cat values-staging.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                            helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
-                            '''
-                        }
-                    }
+        stage('Deployment to staging') {
+            environment {
+                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                    cat values-staging.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                    helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
+                    '''
                 }
             }
         }
 
-        stage(' Deployment to staging') {
-            parallel {
-                stage('Deployment to staging') {
-                    environment {
-                        KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-                    }
-                    steps {
-                        script {
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            ls
-                            cat $KUBECONFIG > .kube/config
-                            cp helm-for-jenkins/values-staging.yaml values-staging.yml
-                            cat values-staging.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                            helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
-                            '''
-                        }
-                    }
+        stage('Deployment to staging') {
+            environment {
+                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                    cat values-staging.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                    helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
+                    '''
                 }
             }
         }
 
-        stage(' Deployment to prod') {
-            parallel {
-                stage('Deployment to prod') {
-                    environment {
-                        KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-                    }
-                    steps {
-                        timeout(time: 15, unit: 'MINUTES') {
-                            input message: 'Do you want to deploy in production ?', ok: 'Yes'
-                        }
-                        script {
-                            sh '''
-                            rm -Rf .kube
-                            mkdir .kube
-                            ls
-                            cat $KUBECONFIG > .kube/config
-                            cp helm-for-jenkins/values-prod.yaml values-prod.yml
-                            cat values-prod.yml
-                            sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                            helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
-                            '''
-                        }
-                    }
+        stage('Deployment to prod') {
+            environment {
+                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
+            }
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                }
+                script {
+                    sh '''
+                    rm -Rf .kube
+                    mkdir .kube
+                    ls
+                    cat $KUBECONFIG > .kube/config
+                    cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                    cat values-prod.yml
+                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                    helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
+                    '''
                 }
             }
         }
