@@ -161,6 +161,7 @@ pipeline {
                     cp helm-for-jenkins/values-qa.yaml values-qa.yml
                     cat values-qa.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                    cat values-qa.yml
                     kubectl create namespace qa
                     helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                     '''
