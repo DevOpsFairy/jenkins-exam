@@ -139,7 +139,6 @@ pipeline {
                     cat $KUBECONFIG > .kube/config
                     cp helm-for-jenkins/values-dev.yaml values-dev.yml
                     cat values-dev.yml
-                    // sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
                     kubectl create namespace dev
                     helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                     '''
