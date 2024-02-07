@@ -14,4 +14,3 @@ movieDB:
 
 castDB:
   replicas: 2
-
