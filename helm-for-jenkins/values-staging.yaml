@@ -2,28 +2,63 @@ global:
   namespace: "staging"
 
 movie:
+  image: "bullfinch38/movie-image"
+  replicas: 1
   tag: "staging"
+  port: 8000
   environment:
-    POSTGRES_USER: "movie_db_username_staging"
-    POSTGRES_PASSWORD: "movie_db_password_staging"
-    POSTGRES_DB: "movie_db_staging"
-    POSTGRES_HOST: "movie_db_staging"
+    POSTGRES_USER: "movie_db_username"
+    POSTGRES_PASSWORD: "movie_db_password"
+    POSTGRES_DB: "movie_db_dev"
+    POSTGRES_HOST: "movie_db"
 
 cast:
+  image: "bullfinch38/movie-image"
+  replicas: 1
   tag: "staging"
+  port: 8000
   environment:
-    POSTGRES_USER: "cast_db_username_staging"
-    POSTGRES_PASSWORD: "cast_db_password_staging"
-    POSTGRES_DB: "cast_db_staging"
-    POSTGRES_HOST: "cast-staging"
+    POSTGRES_USER: "cast_db_username"
+    POSTGRES_PASSWORD: "cast_db_password"
+    POSTGRES_DB: "cast_db_dev"
+    POSTGRES_HOST: "cast-db"
 
 movieDB:
-  POSTGRES_USER: "movie_db_username_staging"
-  POSTGRES_PASSWORD: "movie_db_password_staging"
-  POSTGRES_DB: "movie_db_staging"
-  POSTGRES_HOST: "movie-staging"
+  image: "postgres:12.1-alpine"
+  replicas: 1
+  port: 5432
+  POSTGRES_USER: "movie_db_username"
+  POSTGRES_PASSWORD: "movie_db_password"
+  POSTGRES_DB: "movie_db_dev"
+  POSTGRES_HOST: "movie-db"
+  pvcName: "movie-db-pvc"
+  volume:
+    size: "1Gi"
 
 castDB:
-  POSTGRES_USER: "cast_db_username_staging"
-  POSTGRES_PASSWORD: "cast_db_password_staging"
-  POSTGRES_DB: "cast_db_staging"
+  image: "postgres:12.1-alpine"
+  replicas: 1
+  port: 5432
+  POSTGRES_USER: "cast_db_username"
+  POSTGRES_PASSWORD: "cast_db_password"
+  POSTGRES_DB: "cast_db_dev"
+  pvcName: "cast-db-pvc"
+  volume:
+    size: "1Gi"
+
+nginx:
+  image: "nginx:latest"
+  replicas: 1
+  port: 8080
+  config: |
+    server {
+      listen 8080;
+
+      location /api/v1/movies {
+        proxy_pass http://movie-service:8000/api/v1/movies;
+      }
+
+      location /api/v1/casts {
+        proxy_pass http://cast-service:8000/api/v1/casts;
+      }
+    }
