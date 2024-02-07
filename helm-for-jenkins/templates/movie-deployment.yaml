@@ -20,6 +20,6 @@ spec:
         - containerPort: {{ .Values.movie.port }}
         env:
         - name: DATABASE_URI
-          value: "postgresql://{{ .Values.movieDB.POSTGRES_USER }}:{{ .Values.movieDB.POSTGRES_PASSWORD }}@movie-db/{{ .Values.movieDB.POSTGRES_DB }}"
+          value: "postgresql://{{ .Values.movieDB.POSTGRES_USER }}:{{ .Values.movieDB.POSTGRES_PASSWORD }}@{{ .Values.movieDB.POSTGRES_HOST }}/{{ .Values.movieDB.POSTGRES_DB }}"
         - name: CAST_SERVICE_HOST_URL
           value: "http://cast-service:{{ .Values.cast.port }}/api/v1/casts/"
