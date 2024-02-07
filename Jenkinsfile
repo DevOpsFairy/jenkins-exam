@@ -186,26 +186,6 @@ pipeline {
             }
         }
 
-        stage('Deployment to staging') {
-            environment {
-                KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
-            }
-            steps {
-                script {
-                    sh '''
-                    rm -Rf .kube
-                    mkdir .kube
-                    ls
-                    cat $KUBECONFIG > .kube/config
-                    cp helm-for-jenkins/values-staging.yaml values-staging.yml
-                    cat values-staging.yml
-                    sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                    helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
-                    '''
-                }
-            }
-        }
-
         stage('Deployment to prod') {
             environment {
                 KUBECONFIG = credentials('config') // retrieve kubeconfig from secret file called config saved on jenkins
