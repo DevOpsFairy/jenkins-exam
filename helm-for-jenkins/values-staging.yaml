@@ -3,14 +3,6 @@ global:
 
 movie:
   tag: "staging"
-  replicas: 2
 
 cast:
   tag: "staging"
-  replicas: 2
-
-movieDB:
-  replicas: 2
-
-castDB:
-  replicas: 2
