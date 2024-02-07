@@ -140,6 +140,7 @@ pipeline {
                     cp helm-for-jenkins/values-dev.yaml values-dev.yml
                     cat values-dev.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                    kubectl create namespace dev
                     helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                     '''
                 }
@@ -160,6 +161,7 @@ pipeline {
                     cp helm-for-jenkins/values-qa.yaml values-qa.yml
                     cat values-qa.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                    kubectl create namespace qa
                     helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                     '''
                 }
@@ -180,6 +182,7 @@ pipeline {
                     cp helm-for-jenkins/values-staging.yaml values-staging.yml
                     cat values-staging.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                    kubectl create namespace staging
                     helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                     '''
                 }
@@ -203,6 +206,7 @@ pipeline {
                     cp helm-for-jenkins/values-prod.yaml values-prod.yml
                     cat values-prod.yml
                     sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                    kubectl create namespace prod
                     helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                     '''
                 }
