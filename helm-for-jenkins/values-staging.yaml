@@ -3,7 +3,7 @@ global:
 
 movie:
   tag: "staging"
-  replicas: 2
+  replicas: 2 
   environment:
     POSTGRES_USER: "movie_db_username_staging"
     POSTGRES_PASSWORD: "movie_db_password_staging"
@@ -12,7 +12,7 @@ movie:
 
 cast:
   tag: "staging"
-  replicas: 2
+  replicas: 2 
   environment:
     POSTGRES_USER: "cast_db_username_staging"
     POSTGRES_PASSWORD: "cast_db_password_staging"
@@ -20,14 +20,14 @@ cast:
     POSTGRES_HOST: "cast-db"
 
 movieDB:
-  replicas: 2
+  replicas: 2 
   POSTGRES_USER: "movie_db_username_staging"
   POSTGRES_PASSWORD: "movie_db_password_staging"
   POSTGRES_DB: "movie_db_staging"
   POSTGRES_HOST: "movie-db"
 
 castDB:
-  replicas: 2
+  replicas: 2 
   POSTGRES_USER: "cast_db_username_staging"
   POSTGRES_PASSWORD: "cast_db_password_staging"
   POSTGRES_DB: "cast_db_staging"
