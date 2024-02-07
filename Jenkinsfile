@@ -1,140 +1,615 @@
 pipeline {
-    environment {
-        DOCKER_ID = "bullfinch38"
-        DOCKER_IMAGE = "movie-image"
-        DOCKER_TAG = "v.${BUILD_ID}.0"
-        KUBE_NAMESPACE_DEV = "dev"
-        KUBE_NAMESPACE_QA = "qa"
-        KUBE_NAMESPACE_STAGING = "staging"
-        KUBE_NAMESPACE_PROD = "prod"
-        HELM_CHART_NAME = "helm-for-jenkins"
-    }
+environment { // Declaration of environment variables
+DOCKER_ID = "bullfinch38" // replace this with your docker-id
+DOCKER_IMAGE_CAST = "cast-image"
+DOCKER_IMAGE_MOVIE = "movie-image"
+DOCKER_TAG = "v.${BUILD_ID}.0" // we will tag our images with the current build in order to increment the value by 1 with each new build
+}
+agent any // Jenkins will be able to select all available agents
+stages {
 
-    agent any
+        stage(' Docker run databases '){
+            parallel {   
+                stage(' Docker run movie db'){ // run container from our builded image
+                        steps {
+                            script {
+                            sh '''
+                            docker rm -f movie_db
+                            docker run -d --volume postgres_data_movie:/var/lib/postgresql/data/ -e POSTGRES_USER='movie_db_username' -e POSTGRES_PASSWORD='movie_db_password' -e POSTGRES_DB='movie_db_dev' --name movie_db postgres:12.1-alpine
+                            sleep 10
+                            '''
+                            }
+                        }
+                }
+                stage(' Docker run cast db'){ // run container from our builded image
+                        steps {
+                            script {
+                            sh '''
+                            docker rm -f cast_db
+                            docker run -d --volume postgres_data_cast:/var/lib/postgresql/data/ -e POSTGRES_USER='cast_db_username' -e POSTGRES_PASSWORD='cast_db_password' -e POSTGRES_DB='cast_db_dev' --name cast_db postgres:12.1-alpine
+                            sleep 10
+                            '''
+                            }
+                        }
+                }
+            }
+         }    
 
-    stages {
-        stage('Build and Push Docker Images') {
-            steps {
-                script {
-                    docker.build("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}", "./")
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_credentials') {
-                        docker.image("${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+        stage(' Docker Build'){
+            parallel {
+                stage(' Docker Build Cast'){ // docker build image stage
+                    steps {
+                        script {
+                        sh '''
+                        docker rm -f cast_service
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG ./cast-service/
+                        sleep 6
+                        '''
+                        }
+                    }
+                }
+                stage(' Docker Build Movie'){ // docker build image stage
+                    steps {
+                        script {
+                        sh '''
+                        docker rm -f movie_service
+                        docker build -t $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG ./movie-service/
+                        sleep 6
+                        '''
+                        }
                     }
                 }
             }
-        }
-
-        stage('Unit Test - Movies API') {
-            steps {
-                script {
-                    sh '''
-                        docker run --rm --name test-movies-api -v ./movie-service/:/app/ $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG} pytest -v
-                    '''
+         }
+         stage(' Docker run'){
+            parallel {   
+                stage(' Docker run Cast'){ // run container from our builded image
+                        steps {
+                            script {
+                            sh '''
+                            docker run -d -p 8002:8000 --volume ./cast-service/:/app/ -e DATABASE_URI='postgresql://cast_db_username:cast_db_password@cast_db/cast_db_dev' --name cast_service $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG 
+                            sleep 10
+                            '''
+                            }
+                        }
+                }
+                stage(' Docker run Movie'){ // run container from our builded image
+                        steps {
+                            script {
+                            sh '''
+                            docker run -d -p 8001:8000 --volume ./movie-service/:/app/ -e DATABASE_URI='postgresql://movie_db_username:movie_db_password@movie_db/movie_db_dev' -e CAST_SERVICE_HOST_URL='http://cast_service:8000/api/v1/casts/' --name movie_service $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG 
+                            sleep 10
+                            '''
+                            }
+                        }
                 }
             }
-        }
+         }
 
-        stage('Unit Test - Casts API') {
+         stage(' Docker run ngnix '){
             steps {
-                script {
-                    sh '''
-                        docker run --rm --name test-casts-api -v ./cast-service/:/app/ $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG} pytest -v
-                    '''
+                            script {
+                            sh '''
+                            docker rm -f nginx
+                            docker run -d -p 8088:8080 --volume ./nginx_config.conf:/etc/nginx/conf.d/default.conf --name nginx nginx:latest
+                            sleep 10
+                            '''
+                            }
                 }
-            }
-        }
 
-        stage('Integration Test - Nginx') {
+        }       
+
+        stage('Test Acceptance'){ // we launch the curl command to validate that the container responds to the request
             steps {
-                script {
+                    script {
                     sh '''
-                        docker run --rm --name test-nginx -v ./nginx_config.conf:/etc/nginx/default.conf curlimages/curl -L -v http://172.17.0.4
+                    curl localhost
                     '''
-                }
+                    }
             }
-        }
 
-        stage('Integration Test - Movies API') {
+        }
+        stage('Docker Push'){ //we pass the built image to our docker hub account
+            environment
+            {
+                DOCKER_PASS = credentials("DOCKER_HUB_PASS") // we retrieve  docker password from secret text called docker_hub_pass saved on jenkins
+            }
+
             steps {
+
                 script {
-                    sh '''
-                        docker run --rm --name test-movies-api curlimages/curl -L -v http://172.17.0.5:8000/api/v1/movies/status
-                    '''
-                }
-            }
-        }
-
-        stage('Integration Test - Casts API') {
-            steps {
-                script {
-                    sh '''
-                        docker run --rm --name test-casts-api curlimages/curl -L -v http://172.17.0.6:8000/api/v1/casts/status
-                    '''
-                }
-            }
-        }
-
-        stage('Push images in Docker Hub') {
-            environment {
-                DOCKER_PASS = credentials("DOCKER_HUB_PASS")
-            }
-            steps {
                 sh '''
-                    docker login -u $DOCKER_ID -p $DOCKER_PASS
-                    docker push $DOCKER_ID/${DOCKER_IMAGE}:${DOCKER_TAG}
+                docker login -u $DOCKER_ID -p $DOCKER_PASS
+                docker push $DOCKER_ID/$DOCKER_IMAGE_CAST:$DOCKER_TAG
+                docker push $DOCKER_ID/$DOCKER_IMAGE_MOVIE:$DOCKER_TAG
                 '''
+                }
             }
+
+        }
+        
+        stage('Deployment db ti dev'){
+            parallel {
+                stage('Deployment to dev cast db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp castdb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install castdb castdb --values=values.yml --namespace dev
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to dev movie db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp moviedb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install moviedb moviedb --values=values.yml --namespace dev
+                                '''
+                                }
+                            }
+
+                }
+            }
+        }        
+
+        stage('Deployment app to dev'){
+
+            parallel {
+                stage('Deployment to dev cast app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp cast/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install cast cast --values=values.yml --namespace dev
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to dev movie app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp movie/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install movie movie --values=values.yml --namespace dev
+                                '''
+                                }
+                            }
+
+                }
+            }
+
+
         }
 
-        stage('Deploy to Dev Environment') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh '''
-                            cp ${KUBECONFIG} .kube/config
-                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_DEV} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
-                    }
+        stage('Deployment to dev nginx app'){
+            environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp nginx/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install nginx nginx --values=values.yml --namespace dev
+                                '''
+                                }
+                            }
+        }            
+
+        stage(' Deployment db to qa'){
+            parallel {
+                stage('Deployment to qa cast db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp castdb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install castdb castdb --values=values.yml --namespace qa
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to qa movie db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp moviedb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install moviedb moviedb --values=values.yml --namespace qa
+                                '''
+                                }
+                            }
+
+                }
+            }
+        }        
+
+        stage(' Deployment app to qa'){
+            parallel {
+                stage('Deployment to qa cast app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp cast/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install cast cast --values=values.yml --namespace qa
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to qa movie app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp movie/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install movie movie --values=values.yml --namespace qa
+                                '''
+                                }
+                            }
+
                 }
             }
         }
 
-        stage('Deploy to QA Environment') {
-            // Add QA deployment steps here
-        }
+          stage('Deployment to qa nginx app'){
+            environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp nginx/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install nginx nginx --values=values.yml --namespace qa
+                                '''
+                                }
+                            }
+          }           
 
-        stage('Deploy to Staging Environment') {
-            // Add Staging deployment steps here
-        }
 
-        stage('Deploy to Prod Environment') {
-            when {
-                expression {
-                    return env.GIT_BRANCH == "origin/master"
+        stage(' Deployment db to staging'){
+            parallel {
+                stage('Deployment to staging cast db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp castdb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install castdb castdb --values=values.yml --namespace staging
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to staging movie db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp moviedb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install moviedb moviedb --values=values.yml --namespace staging
+                                '''
+                                }
+                            }
+
                 }
             }
-            steps {
-                timeout(time: 15, unit: "MINUTES") {
-                    input message: 'Want to deploy in prod ', ok: 'Yes'
+        }        
+
+        stage(' Deployment to staging'){
+            parallel {
+                stage('Deployment to staging cast app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp cast/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install cast cast --values=values.yml --namespace staging
+                                '''
+                                }
+                            }
+
                 }
 
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh '''
-                            cp ${KUBECONFIG} .kube/config
-                            helm upgrade --install app ${HELM_CHART_NAME} --namespace ${KUBE_NAMESPACE_PROD} --set movie.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG} --set cast.image=${DOCKER_ID}/${DOCKER_IMAGE}:${DOCKER_TAG}
-                        '''
-                    }
+                stage('Deployment to staging movie app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp movie/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install movie movie --values=values.yml --namespace staging
+                                '''
+                                }
+                            }
+
                 }
             }
         }
-    }
 
-    post {
-        failure {
-            mail to: "konstantinsnigirev92@gmail.com",
-                 subject: "${env.JOB_NAME} - Build # ${env.BUILD_ID} has failed",
-                 body: "For more info on the pipeline failure, check out the console output at ${env.BUILD_URL}"
+          stage('Deployment to staging nginx app'){
+            environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp nginx/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install nginx nginx --values=values.yml --namespace staging
+                                '''
+                                }
+                            }
+        }    
+
+        stage(' Deployment db to prod'){
+            parallel {
+                stage('Deployment to prod cast db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                timeout(time: 15, unit: "MINUTES") {
+                                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                                }
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp castdb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install castdb castdb --values=values.yml --namespace prod
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to prod movie db app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                timeout(time: 15, unit: "MINUTES") {
+                                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                                }
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp moviedb/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install moviedb moviedb --values=values.yml --namespace prod
+                                '''
+                                }
+                            }
+
+                }
+            }
         }
-    }
+
+        stage(' Deployment to prod'){
+            parallel {
+                stage('Deployment to prod cast app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                timeout(time: 15, unit: "MINUTES") {
+                                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                                }
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp cast/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install cast cast --values=values.yml --namespace prod
+                                '''
+                                }
+                            }
+
+                }
+
+                stage('Deployment to prod movie app'){
+                        environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                timeout(time: 15, unit: "MINUTES") {
+                                    input message: 'Do you want to deploy in production ?', ok: 'Yes'
+                                }
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp movie/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install movie movie --values=values.yml --namespace prod
+                                '''
+                                }
+                            }
+
+                }
+            }
+        }
+
+        stage('Deployment to prod nginx app'){
+            environment
+                        {
+                        KUBECONFIG = credentials("config") // we retrieve  kubeconfig from secret file called config saved on jenkins
+                        }
+                            steps {
+                                script {
+                                sh '''
+                                rm -Rf .kube
+                                mkdir .kube
+                                ls
+                                cat $KUBECONFIG > .kube/config
+                                cp nginx/values.yaml values.yml
+                                cat values.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
+                                helm upgrade --install nginx nginx --values=values.yml --namespace prod
+                                '''
+                                }
+                            }
+        }    
+}
 }
