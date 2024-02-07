@@ -145,7 +145,7 @@ stages {
                                 cp helm-for-jenkins/values-dev.yaml values-dev.yml
                                 cat values-dev.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                                helm upgrade --install castdb helm-for-jenkins --values=values-dev.yml --namespace dev
+                                helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -167,7 +167,7 @@ stages {
                                 cp helm-for-jenkins/values-dev.yaml values-dev.yml
                                 cat values-dev.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                                helm upgrade --install moviedb helm-for-jenkins --values=values-dev.yml --namespace dev
+                                helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -194,7 +194,7 @@ stages {
                                 cp helm-for-jenkins/values-dev.yaml values-dev.yml
                                 cat values-dev.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                                helm upgrade --install cast helm-for-jenkins --values=values-dev.yml --namespace dev
+                                helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -216,7 +216,7 @@ stages {
                                 cp helm-for-jenkins/values-dev.yaml values-dev.yml
                                 cat values-dev.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                                helm upgrade --install movie helm-for-jenkins --values=values-dev.yml --namespace dev
+                                helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -242,7 +242,7 @@ stages {
                                 cp helm-for-jenkins/values-dev.yaml values-dev.yml
                                 cat values-dev.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
-                                helm upgrade --install nginx helm-for-jenkins --values=values-dev.yml --namespace dev
+                                helm upgrade --install exam helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -265,7 +265,7 @@ stages {
                                 cp helm-for-jenkins/values-qa.yaml values-qa.yml
                                 cat values-qa.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                                helm upgrade --install castdb helm-for-jenkins --values=values-qa.yml --namespace qa
+                                helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -287,7 +287,7 @@ stages {
                                 cp helm-for-jenkins/values-qa.yaml values-qa.yml
                                 cat values-qa.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                                helm upgrade --install moviedb helm-for-jenkins --values=values-qa.yml --namespace qa
+                                helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -313,7 +313,7 @@ stages {
                                 cp helm-for-jenkins/values-qa.yaml values-qa.yml
                                 cat values-qa.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                                helm upgrade --install cast helm-for-jenkins --values=values-qa.yml --namespace qa
+                                helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -335,7 +335,7 @@ stages {
                                 cp helm-for-jenkins/values-qa.yaml values-qa.yml
                                 cat values-qa.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                                helm upgrade --install movie helm-for-jenkins --values=values-qa.yml --namespace qa
+                                helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -359,7 +359,7 @@ stages {
                                 cp helm-for-jenkins/values-qa.yaml values-qa.yml
                                 cat values-qa.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
-                                helm upgrade --install nginx helm-for-jenkins --values=values-qa.yml --namespace qa
+                                helm upgrade --install exam helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -383,7 +383,7 @@ stages {
                                 cp helm-for-jenkins/values-staging.yaml values-staging.yml
                                 cat values-staging.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                                helm upgrade --install castdb helm-for-jenkins --values=values-staging.yml --namespace staging
+                                helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -405,7 +405,7 @@ stages {
                                 cp helm-for-jenkins/values-staging.yaml values-staging.yml
                                 cat values-staging.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                                helm upgrade --install moviedb helm-for-jenkins --values=values-staging.yml --namespace staging
+                                helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -431,7 +431,7 @@ stages {
                                 cp helm-for-jenkins/values-staging.yaml values-staging.yml
                                 cat values-staging.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                                helm upgrade --install cast helm-for-jenkins --values=values-staging.yml --namespace staging
+                                helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -453,7 +453,7 @@ stages {
                                 cp helm-for-jenkins/values-staging.yaml values-staging.yml
                                 cat values-staging.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                                helm upgrade --install movie helm-for-jenkins --values=values-staging.yml --namespace staging
+                                helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -477,7 +477,7 @@ stages {
                                 cp helm-for-jenkins/values-staging.yaml values-staging.yml
                                 cat values-staging.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
-                                helm upgrade --install nginx helm-for-jenkins --values=values-staging.yml --namespace staging
+                                helm upgrade --install exam helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -503,7 +503,7 @@ stages {
                                 cp helm-for-jenkins/values-prod.yaml values-prod.yml
                                 cat values-prod.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                                helm upgrade --install castdb helm-for-jenkins --values=values-prod.yml --namespace prod
+                                helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -528,7 +528,7 @@ stages {
                                 cp helm-for-jenkins/values-prod.yaml values-prod.yml
                                 cat values-prod.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                                helm upgrade --install moviedb helm-for-jenkins --values=values-prod.yml --namespace prod
+                                helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -557,7 +557,7 @@ stages {
                                 cp helm-for-jenkins/values-prod.yaml values-prod.yml
                                 cat values-prod.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                                helm upgrade --install cast helm-for-jenkins --values=values-prod.yml --namespace prod
+                                helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -582,7 +582,7 @@ stages {
                                 cp helm-for-jenkins/values-prod.yaml values-prod.yml
                                 cat values-prod.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                                helm upgrade --install movie helm-for-jenkins --values=values-prod.yml --namespace prod
+                                helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -606,7 +606,7 @@ stages {
                                 cp helm-for-jenkins/values-prod.yaml values-prod.yml
                                 cat values-prod.yml
                                 sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
-                                helm upgrade --install nginx helm-for-jenkins --values=values-prod.yml --namespace prod
+                                helm upgrade --install exam helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
