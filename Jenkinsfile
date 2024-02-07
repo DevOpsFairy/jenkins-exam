@@ -128,7 +128,7 @@ stages {
 
         }
         
-        stage('Deployment db ti dev'){
+        stage('Deployment db to dev'){
             parallel {
                 stage('Deployment to dev cast db app'){
                         environment
@@ -142,10 +142,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install castdb castdb --values=values.yml --namespace dev
+                                cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                                cat values-dev.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                                helm upgrade --install castdb helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -164,10 +164,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install moviedb moviedb --values=values.yml --namespace dev
+                                cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                                cat values-dev.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                                helm upgrade --install moviedb helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -191,10 +191,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install cast cast --values=values.yml --namespace dev
+                                cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                                cat values-dev.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                                helm upgrade --install cast helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -213,10 +213,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install movie movie --values=values.yml --namespace dev
+                                cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                                cat values-dev.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                                helm upgrade --install movie helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -239,10 +239,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install nginx nginx --values=values.yml --namespace dev
+                                cp helm-for-jenkins/values-dev.yaml values-dev.yml
+                                cat values-dev.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-dev.yml
+                                helm upgrade --install nginx helm-for-jenkins --values=values-dev.yml --namespace dev
                                 '''
                                 }
                             }
@@ -262,10 +262,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install castdb castdb --values=values.yml --namespace qa
+                                cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                                cat values-qa.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                                helm upgrade --install castdb helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -284,10 +284,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install moviedb moviedb --values=values.yml --namespace qa
+                                cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                                cat values-qa.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                                helm upgrade --install moviedb helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -310,10 +310,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install cast cast --values=values.yml --namespace qa
+                                cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                                cat values-qa.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                                helm upgrade --install cast helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -332,10 +332,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install movie movie --values=values.yml --namespace qa
+                                cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                                cat values-qa.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                                helm upgrade --install movie helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -356,10 +356,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install nginx nginx --values=values.yml --namespace qa
+                                cp helm-for-jenkins/values-qa.yaml values-qa.yml
+                                cat values-qa.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-qa.yml
+                                helm upgrade --install nginx helm-for-jenkins --values=values-qa.yml --namespace qa
                                 '''
                                 }
                             }
@@ -380,10 +380,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install castdb castdb --values=values.yml --namespace staging
+                                cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                                cat values-staging.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                                helm upgrade --install castdb helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -402,10 +402,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install moviedb moviedb --values=values.yml --namespace staging
+                                cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                                cat values-staging.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                                helm upgrade --install moviedb helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -428,10 +428,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install cast cast --values=values.yml --namespace staging
+                                cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                                cat values-staging.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                                helm upgrade --install cast helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -450,10 +450,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install movie movie --values=values.yml --namespace staging
+                                cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                                cat values-staging.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                                helm upgrade --install movie helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -474,10 +474,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install nginx nginx --values=values.yml --namespace staging
+                                cp helm-for-jenkins/values-staging.yaml values-staging.yml
+                                cat values-staging.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-staging.yml
+                                helm upgrade --install nginx helm-for-jenkins --values=values-staging.yml --namespace staging
                                 '''
                                 }
                             }
@@ -500,10 +500,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install castdb castdb --values=values.yml --namespace prod
+                                cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                                cat values-prod.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                                helm upgrade --install castdb helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -525,10 +525,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install moviedb moviedb --values=values.yml --namespace prod
+                                cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                                cat values-prod.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                                helm upgrade --install moviedb helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -554,10 +554,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install cast cast --values=values.yml --namespace prod
+                                cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                                cat values-prod.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                                helm upgrade --install cast helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -579,10 +579,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install movie movie --values=values.yml --namespace prod
+                                cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                                cat values-prod.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                                helm upgrade --install movie helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
@@ -603,10 +603,10 @@ stages {
                                 mkdir .kube
                                 ls
                                 cat $KUBECONFIG > .kube/config
-                                cp helm-for-jenkins/values.yaml values.yml
-                                cat values.yml
-                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values.yml
-                                helm upgrade --install nginx nginx --values=values.yml --namespace prod
+                                cp helm-for-jenkins/values-prod.yaml values-prod.yml
+                                cat values-prod.yml
+                                sed -i "s+tag.*+tag: ${DOCKER_TAG}+g" values-prod.yml
+                                helm upgrade --install nginx helm-for-jenkins --values=values-prod.yml --namespace prod
                                 '''
                                 }
                             }
